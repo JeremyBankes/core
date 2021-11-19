@@ -51,9 +51,12 @@ const core = {
                 case 'boolean':
                     return Boolean(value);
                 case 'date':
-                    value = date.parse(value);
+                    value = core.time.parse(value);
                     if (isNaN(value)) return null;
                     return value;
+                case 'array':
+                    if (!(Symbol.iterator in Object(value))) return null;
+                    return [...value];
                 case 'object':
                     return value;
                 default:
@@ -117,11 +120,15 @@ const core = {
 
         /**
          * Attemps to create a Date object from 'value'
-         * @param {string|number|Date} value
+         * @param {string} value A string with ordered date values (year, month, date, hours, minutes, seconds, ms) (Any delimiter)
+         * @param {string} [timeZone] Defaults to UTC
          * @returns 
          */
-        parse(value) {
-            return new Date(value);
+        parse(value, timeZone) {
+            const values = value.match(/[0-9]+/g).map(item => parseInt(item));
+            if (values.length > 1) values[1]--;
+            const unixTimestamp = Date.UTC(...values) - this.getTimeZoneOffset(timeZone, new Date());
+            return new Date(unixTimestamp);
         },
 
         /**
@@ -143,6 +150,19 @@ const core = {
         },
 
         /**
+         * @param {string} [timeZone] A time zone (https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). Defaults to system time zone.
+         * @param {Date} [date] When to determine the offset at, important for daylight saving times. Defaults to now.
+         * @returns The number of milliseconds to add to UTC time to get to 'timeZone'
+         */
+        getTimeZoneOffset(timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone, date = new Date()) {
+            const format = new Intl.DateTimeFormat([], { hour: 'numeric', hourCycle: 'h23', timeZone });
+            const hours = parseInt(format.formatToParts(date).find(part => part.type === 'hour').value);
+            let offset = hours - date.getUTCHours();
+            if (offset < -12) offset += 24;
+            return offset * 60 * 60 * 1000;
+        },
+
+        /**
          * Converts a date to string
          * @param {Date} date
          * @param {boolean} long True for long date (full names and number suffixes), false otherwise
@@ -158,6 +178,28 @@ const core = {
             if (includeDay && !includeYear) return `${day}, ${month} ${dateOfMonth}`;
             if (!includeDay && includeYear) return `${month} ${dateOfMonth}, ${year}`;
             if (!includeDay && !includeYear) return `${month} ${dateOfMonth}`;
+        },
+
+        /**
+         * Converts a date to an ISO string
+         * @param {Date} date 
+         * @param {boolean} includeTime 
+         */
+        toISOString(date, includeTime = false) {
+            let string = date.toISOString();
+            if (!includeTime) string = string.substring(0, 10);
+            return string;
+        }
+
+    },
+
+    error: {
+
+        /**
+         * An error to represent an error that occured because of invalid client input
+         */
+        UserError: class extends Error {
+            constructor(...parameters) { super(...parameters); }
         }
 
     }
