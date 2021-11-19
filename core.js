@@ -106,6 +106,20 @@ const core = {
                 return word + 's';
             }
             return word;
+        },
+
+        /**
+         * Converts text into a slug string
+         * 
+         * I.E.
+         * 
+         * "Jeremy's Friend Was Here" -> "jeremys-friend-was-here"
+         * 
+         * @param {string} text 
+         * @returns A safe slug string
+         */
+        toSlug(text) {
+            return text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/ +/g, '-');
         }
 
     },
@@ -119,6 +133,23 @@ const core = {
         LONG_MONTH_NAMES: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 
         /**
+         * @param {Date} date 
+         * @returns UTC values object
+         */
+        utc(date = new Date()) {
+            return {
+                year: date.getUTCFullYear(),
+                month: date.getUTCMonth(),
+                date: date.getUTCDate(),
+                day: date.getUTCDay(),
+                hours: date.getUTCHours(),
+                minute: date.getUTCMinutes(),
+                seconds: date.getUTCSeconds(),
+                milliseconds: date.getUTCMilliseconds()
+            };
+        },
+
+        /**
          * Attemps to create a Date object from 'value'
          * @param {string} value A string with ordered date values (year, month, date, hours, minutes, seconds, ms) (Any delimiter)
          * @param {string} [timeZone] Defaults to UTC
@@ -127,8 +158,9 @@ const core = {
         parse(value, timeZone) {
             const values = value.match(/[0-9]+/g).map(item => parseInt(item));
             if (values.length > 1) values[1]--;
-            const unixTimestamp = Date.UTC(...values) - this.getTimeZoneOffset(timeZone, new Date());
-            return new Date(unixTimestamp);
+            const unixTimestamp = Date.UTC(...values);
+            const offset = this.getTimeZoneOffset(timeZone, new Date(unixTimestamp));
+            return new Date(unixTimestamp - offset);
         },
 
         /**
@@ -157,9 +189,10 @@ const core = {
         getTimeZoneOffset(timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone, date = new Date()) {
             const format = new Intl.DateTimeFormat([], { hour: 'numeric', hourCycle: 'h23', timeZone });
             const hours = parseInt(format.formatToParts(date).find(part => part.type === 'hour').value);
-            let offset = hours - date.getUTCHours();
-            if (offset < -12) offset += 24;
-            return offset * 60 * 60 * 1000;
+            let hoursOffset = hours - date.getUTCHours();
+            while (hoursOffset < -12) hoursOffset += 24;
+            while (hoursOffset > 12) hoursOffset -= 24;
+            return hoursOffset * 60 * 60 * 1000;
         },
 
         /**
@@ -178,6 +211,34 @@ const core = {
             if (includeDay && !includeYear) return `${day}, ${month} ${dateOfMonth}`;
             if (!includeDay && includeYear) return `${month} ${dateOfMonth}, ${year}`;
             if (!includeDay && !includeYear) return `${month} ${dateOfMonth}`;
+        },
+
+        /**
+         * Returns a human readable duration string for the given amount of milliseconds
+         * @param {number} milliseconds 
+         * @param {boolean} long 
+         */
+        toDurationString(milliseconds, long = true) {
+            const SECOND = 1000;
+            const MINUTE = SECOND * 60;
+            const HOUR = MINUTE * 60;
+            const DAY = HOUR * 24;
+            let days = 0;
+            let hours = 0;
+            let minutes = 0;
+            let seconds = 0;
+            while (milliseconds >= DAY) { milliseconds -= DAY; days++; }
+            while (milliseconds >= HOUR) { milliseconds -= HOUR; hours++; }
+            while (milliseconds >= MINUTE) { milliseconds -= MINUTE; minutes++; }
+            while (milliseconds >= SECOND) { milliseconds -= SECOND; seconds++; }
+            seconds += Math.round(milliseconds / SECOND);
+            const pieces = [];
+            if (days > 0) pieces.push(`${days} ${long ? core.text.pluralize('day', days) : 'd'}`);
+            if (hours > 0) pieces.push(`${hours} ${long ? core.text.pluralize('hour', hours) : 'h'}`);
+            if (minutes > 0) pieces.push(`${minutes} ${long ? core.text.pluralize('minute', minutes) : 'm'}`);
+            if (seconds > 0) pieces.push(`${seconds} ${long ? core.text.pluralize('second', seconds) : 's'}`);
+            if (pieces.length === 0) pieces.push('less than a second');
+            return pieces.join(', ');
         },
 
         /**
