@@ -20,7 +20,7 @@ const core = {
             const path = field.split('.').reverse();
             const search = (object, path) => {
                 const key = path.pop();
-                if (!(key in object)) return undefined;
+                if (!key || !(key in object)) return undefined;
                 const value = object[key];
                 if (path.length === 0) return value;
                 return search(value, path);
