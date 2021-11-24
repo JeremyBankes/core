@@ -6,7 +6,7 @@ const core = {
     data: {
 
         /**
-         * @typedef {'string'|'number'|'boolean'|'date'|'object'} ParsableType
+         * @typedef {'string'|'number'|'boolean'|'date'|'array'|'object'} ParsableType
          */
 
         /**
@@ -173,9 +173,9 @@ const core = {
          * @returns 
          */
         parse(value, timeZone = 'Etc/UTC') {
-            const values = value.match(/[0-9]+/g).map(item => parseInt(item));
-            if (values.length > 1) values[1]--;
-            return core.time.create(timeZone, ...values);
+            const date = new Date(value);
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            return core.time.create(timeZone, ...Object.values(core.time.utc(date)));
         },
 
         /**
@@ -213,19 +213,18 @@ const core = {
         /**
          * Converts a date to string
          * @param {Date} date
-         * @param {boolean} long True for long date (full names and number suffixes), false otherwise
-         * @param {boolean} includeDay
-         * @param {boolean} includeYear 
+         * @param {string} [timeZone]
+         * @param {boolean} [long] True for long date (full names and number suffixes), false otherwise
+         * @param {boolean} [includeDay]
+         * @param {boolean} [includeYear] 
          */
-        toString(date, long = false, includeDay = true, includeYear = true) {
-            const year = date.getFullYear();
-            const day = core.time.getDay(date, long);
-            const month = core.time.getMonth(date, long);
-            const dateOfMonth = long ? `${date.getDate()}${core.text.getNumberSuffix(date.getDate())}` : date.getDate();
-            if (includeDay && includeYear) return `${day}, ${month} ${dateOfMonth}, ${year}`;
-            if (includeDay && !includeYear) return `${day}, ${month} ${dateOfMonth}`;
-            if (!includeDay && includeYear) return `${month} ${dateOfMonth}, ${year}`;
-            if (!includeDay && !includeYear) return `${month} ${dateOfMonth}`;
+        toString(date, timeZone = 'Etc/UTC', time = true, long = false, includeWeekday = true, includeYear = false, numeric = false) {
+            if (isNaN(date)) return '';
+            const options = { timeZone, month: numeric ? 'numeric' : (long ? 'long' : 'short'), day: 'numeric' };
+            if (time) { options.hour = 'numeric'; options.minute = 'numeric'; options.second = 'numeric'; }
+            if (includeWeekday) options.weekday = long ? 'long' : 'short';
+            if (includeYear) options.year = 'numeric';
+            return new Intl.DateTimeFormat('default', options).format(date);
         },
 
         /**
