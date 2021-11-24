@@ -150,17 +150,32 @@ const core = {
         },
 
         /**
+         * Creates a Date object in 'timeZone'
+         * @param {string} [timeZone] Defaults to UTC
+         * @param {number} year 
+         * @param {number} month 
+         * @param {number} date 
+         * @param {number} hours 
+         * @param {number} minutes 
+         * @param {number} seconds 
+         * @param {number} milliseconds 
+         */
+        create(timeZone = 'Etc/UTC', year = 0, month = 0, date = 0, hours = 0, minutes = 0, seconds = 0, milliseconds = 0) {
+            const unixTimestamp = Date.UTC(year, month, date, hours, minutes, seconds, milliseconds);
+            const offset = this.getTimeZoneOffset(timeZone, new Date(unixTimestamp));
+            return new Date(unixTimestamp - offset);
+        },
+
+        /**
          * Attemps to create a Date object from 'value'
          * @param {string} value A string with ordered date values (year, month, date, hours, minutes, seconds, ms) (Any delimiter)
          * @param {string} [timeZone] Defaults to UTC
          * @returns 
          */
-        parse(value, timeZone) {
+        parse(value, timeZone = 'Etc/UTC') {
             const values = value.match(/[0-9]+/g).map(item => parseInt(item));
             if (values.length > 1) values[1]--;
-            const unixTimestamp = Date.UTC(...values);
-            const offset = this.getTimeZoneOffset(timeZone, new Date(unixTimestamp));
-            return new Date(unixTimestamp - offset);
+            return core.time.create(timeZone, ...values);
         },
 
         /**
