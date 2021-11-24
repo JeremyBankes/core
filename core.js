@@ -20,7 +20,11 @@ const core = {
             const path = field.split('.').reverse();
             const search = (object, path) => {
                 const key = path.pop();
+<<<<<<< HEAD
                 if (!key || !object || !(key in object)) return undefined;
+=======
+                if (!key || !(key in object)) return undefined;
+>>>>>>> 98352f7e0e18497ff787fa67e4165c5cc6e15c5c
                 const value = object[key];
                 if (path.length === 0) return value;
                 return search(value, path);
