@@ -12,5 +12,5 @@ const core = require('./modules/core/core.js');
 const object = { person: { name: { first: 'Jeremy', last: 'Bankes' } } };
 const name = core.data.get(object, 'person.name.first', 'string');
 const displayDate = core.time.toString(new Date(), true, true, true);
-console.log(`Hello, ${name}. Today is ${displayDate}`);
+console.info(`Hello, ${name}. Today is ${displayDate}`);
 ```
