@@ -51,7 +51,10 @@ const core = {
                 case 'boolean':
                     return Boolean(value);
                 case 'date':
-                    value = core.time.parse(value);
+                    if (typeof value === 'string' && Boolean(value.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/))) {
+                        value = value.replace(/-/g, ' ');
+                    }
+                    value = new Date(value);
                     if (isNaN(value)) return null;
                     return value;
                 case 'array':
@@ -147,35 +150,6 @@ const core = {
                 seconds: date.getUTCSeconds(),
                 milliseconds: date.getUTCMilliseconds()
             };
-        },
-
-        /**
-         * Creates a Date object in 'timeZone'
-         * @param {string} [timeZone] Defaults to UTC
-         * @param {number} year 
-         * @param {number} month 
-         * @param {number} date 
-         * @param {number} hours 
-         * @param {number} minutes 
-         * @param {number} seconds 
-         * @param {number} milliseconds 
-         */
-        create(timeZone = 'Etc/UTC', year = 0, month = 0, date = 0, hours = 0, minutes = 0, seconds = 0, milliseconds = 0) {
-            const unixTimestamp = Date.UTC(year, month, date, hours, minutes, seconds, milliseconds);
-            const offset = this.getTimeZoneOffset(timeZone, new Date(unixTimestamp));
-            return new Date(unixTimestamp - offset);
-        },
-
-        /**
-         * Attemps to create a Date object from 'value'
-         * @param {string} value A string with ordered date values (year, month, date, hours, minutes, seconds, ms) (Any delimiter)
-         * @param {string} [timeZone] Defaults to UTC
-         * @returns 
-         */
-        parse(value, timeZone = 'Etc/UTC') {
-            const date = new Date(value);
-            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            return core.time.create(timeZone, ...Object.values(core.time.utc(date)));
         },
 
         /**
