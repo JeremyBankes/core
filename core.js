@@ -104,7 +104,7 @@ const core = {
          * @param {number} count 
          */
         pluralize(word, count) {
-            if (count > 0) {
+            if (count !== 1) {
                 if (word.endsWith('s')) return word + 'es';
                 return word + 's';
             }
