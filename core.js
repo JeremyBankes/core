@@ -112,6 +112,14 @@ const core = {
         },
 
         /**
+         * Converts a 2D array into a CSV string
+         * @param {any[][]} rows 
+         */
+        csvify(rows) {
+            return rows.map(row => row.map(cell => '"' + cell.toString().replace('"', '\'') + '"').join(',')).join('\n');
+        },
+
+        /**
          * Converts text into a slug string
          * 
          * I.E.
