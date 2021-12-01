@@ -252,6 +252,17 @@ const core = {
             return `${year}-${month}-${day}`;
         },
 
+        /**
+         * Converts a date to an ISO string
+         * @param {Date} date 
+         * @param {boolean} includeTime 
+         */
+        toISOString(date, includeTime = false) {
+            let string = date.toISOString();
+            if (!includeTime) string = string.substring(0, 10);
+            return string;
+        }
+
     },
 
     error: {
