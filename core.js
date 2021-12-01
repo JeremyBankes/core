@@ -49,6 +49,8 @@ const core = {
                     if (isNaN(value)) return null;
                     return value;
                 case 'boolean':
+                    if (value === 'true') return true;
+                    if (value === 'false') return false;
                     return Boolean(value);
                 case 'date':
                     if (typeof value === 'string' && Boolean(value.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/))) {
